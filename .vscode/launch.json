@@ -1,0 +1,38 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Attach: Electron main (9230)",
+      "type": "node",
+      "request": "attach",
+      "port": 9230,
+      "timeout": 60000,
+      "skipFiles": ["<node_internals>/**"],
+      "sourceMaps": true,
+      "outFiles": ["${workspaceFolder}/apps/desktop/dist-electron/**/*.js"],
+      "resolveSourceMapLocations": ["${workspaceFolder}/apps/desktop/**", "!**/node_modules/**"]
+    },
+    {
+      "name": "Attach: Electron renderer (Chrome, 9222)",
+      "type": "chrome",
+      "request": "attach",
+      "port": 9222,
+      "webRoot": "${workspaceFolder}/apps/web",
+      "urlFilter": "http://localhost:*/*"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Attach: main + renderer",
+      "configurations": [
+        "Attach: Electron main (9230)",
+        "Attach: Electron renderer (Chrome, 9222)"
+      ],
+      "stopAll": true,
+      "presentation": {
+        "group": "electron",
+        "order": 1
+      }
+    }
+  ]
+}

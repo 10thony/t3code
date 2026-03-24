@@ -20,6 +20,23 @@ const forcedShutdownTimeoutMs = 1_500;
 const restartDebounceMs = 120;
 const childTreeGracePeriodMs = 1_200;
 
+/** @returns {string[]} flags for `electron` before `--t3code-dev-root` (see root `bun run dev:debug`). */
+function electronDebugFlags() {
+  const flags = [];
+  const inspectBrk = process.env.T3CODE_ELECTRON_INSPECT_BRK?.trim();
+  const inspect = process.env.T3CODE_ELECTRON_INSPECT?.trim();
+  const remote = process.env.T3CODE_ELECTRON_REMOTE_DEBUG?.trim();
+  if (inspectBrk) {
+    flags.push(`--inspect-brk=${inspectBrk}`);
+  } else if (inspect) {
+    flags.push(`--inspect=${inspect}`);
+  }
+  if (remote) {
+    flags.push(`--remote-debugging-port=${remote}`);
+  }
+  return flags;
+}
+
 await waitOn({
   resources: [`tcp:${port}`, ...requiredFiles.map((filePath) => `file:${filePath}`)],
 });
@@ -57,7 +74,7 @@ function startApp() {
 
   const app = spawn(
     resolveElectronPath(),
-    [`--t3code-dev-root=${desktopDir}`, "dist-electron/main.js"],
+    [...electronDebugFlags(), `--t3code-dev-root=${desktopDir}`, "dist-electron/main.js"],
     {
       cwd: desktopDir,
       env: {

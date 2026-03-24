@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { homedir } from "node:os";
+import { join } from "node:path";
 
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
@@ -17,6 +18,18 @@ const MAX_PORT = 65535;
 export const DEFAULT_T3_HOME = Effect.map(Effect.service(Path.Path), (path) =>
   path.join(homedir(), ".t3"),
 );
+
+/** Ensures `turbo` and other root devDependencies resolve when spawning on Windows (no global install). */
+function prependLocalNodeModulesBin(output: NodeJS.ProcessEnv): void {
+  const binDir = join(process.cwd(), "node_modules", ".bin");
+  const sep = process.platform === "win32" ? ";" : ":";
+  const current = output.PATH ?? output.Path ?? "";
+  const merged = current.length > 0 ? `${binDir}${sep}${current}` : binDir;
+  output.PATH = merged;
+  if (process.platform === "win32") {
+    output.Path = merged;
+  }
+}
 
 const MODE_ARGS = {
   dev: [
@@ -195,6 +208,8 @@ export function createDevRunnerEnv({
       output.T3CODE_MODE = "web";
       delete output.T3CODE_DESKTOP_WS_URL;
     }
+
+    prependLocalNodeModulesBin(output);
 
     return output;
   });
